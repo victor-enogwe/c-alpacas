@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json.schemastore.org/tsconfig",
+  "extends": "./node_modules/electron-webpack/tsconfig-base.json",
+  "compileOnSave": false,
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "jsx": "react",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "target": "ES5",
+    "strict": true,
+    "pretty": true,
+    "removeComments": false,
+    "noErrorTruncation": false,
+    "noLib": false,
+    "preserveConstEnums": true,
+    "importHelpers": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "index.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
