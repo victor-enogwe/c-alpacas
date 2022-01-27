@@ -2,7 +2,8 @@ import html2canvas from 'html2canvas'
 import { AlpacaFeatures, AlpacaFeaturesOptions } from '../@types/typings'
 
 export function getStatic (devMode: boolean): string {
-  return devMode ? '/' : window.electron ? __static + '/' : '/'
+  const imgExternal = window.electron.versions.GIT_SRC
+  return devMode ? '/' : window.electron ? (__static + '/') : imgExternal !== 'undefined' ? String(imgExternal) : '/'
 }
 
 export function imageZIndex (feature: keyof AlpacaFeatures, subFeature: keyof AlpacaFeaturesOptions): number {

@@ -6,10 +6,11 @@ function rendererConfig (config) {
   const isProduction = config.mode!== 'development'
   const htmlWebpackPlugin = config.plugins.filter(plugin => plugin.constructor.name === 'HtmlWebpackPlugin')[0]
   const defineWebpackPlugin = config.plugins.filter(plugin => plugin.constructor.name === 'DefinePlugin')[0]
+  const cspGit = process.env.GIT_SRC ? 'https://raw.githubusercontent.com' : ''
   const viewport = 'width=device-width, initial-scale=1.0, shrink-to-fit=no user-scalable=no'
-  const cspContent = "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
-  const cspMeta = { 'http-equiv': 'Content-Security-Policy', content: cspContent }
-  const xCspMeta = { 'http-equiv': 'X-Content-Security-Policy', content: cspContent }
+  const content = `default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: ${cspGit}; style-src 'self' 'unsafe-inline'`
+  const cspMeta = { 'http-equiv': 'Content-Security-Policy', content }
+  const xCspMeta = { 'http-equiv': 'X-Content-Security-Policy', content }
   const htmlMeta = { charset: 'UTF-8', viewport, 'X-Content-Security-Policy': xCspMeta, 'Content-Security-Policy': cspMeta }
   const lodashModules = ['omit', 'defaultsdeep', 'get', 'set', 'sortby'].map(method => `lodash.${method}`)
   const whitelistedModules = ['react', 'react-dom', 'react-color', 'html2canvas', 'three'].concat(lodashModules)
@@ -22,7 +23,8 @@ function rendererConfig (config) {
     'window.electron.versions.NODE_VERSION': NODE_VERSION,
     'window.electron.versions.CHROME_VERSION': CHROME_VERSION,
     'window.electron.versions.ELECTRON_VERSION': ELECTRON_VERSION,
-    'window.electron.versions.GIT_URL': `"${process.env.npm_package_repository_url.replace('git+', '')}"`
+    'window.electron.versions.GIT_URL': `"${process.env.npm_package_repository_url.replace('git+', '')}"`,
+    'window.electron.versions.GIT_SRC': `"${process.env.GIT_SRC}"`
   }
   const definitions = { ...defineWebpackPlugin.definitions, ...versions }
   const chunks = {

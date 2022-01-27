@@ -26,6 +26,7 @@ declare global {
         CHROME_VERSION: string
         ELECTRON_VERSION: string
         GIT_URL: string
+        GIT_SRC?: string
       }
     }
   }
