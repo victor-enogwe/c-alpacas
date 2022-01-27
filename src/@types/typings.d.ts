@@ -1,6 +1,7 @@
 import { Menu, MenuItemConstructorOptions } from 'electron'
 import React from 'react'
 import { Options as SourcemapSupportOptions, Position, UrlAndMap } from 'source-map-support'
+import THREE from 'three'
 import { Entry, Except, Merge, PartialDeep, UnionToIntersection } from 'type-fest'
 
 declare global {
@@ -8,7 +9,6 @@ declare global {
   let __static: string
 
   interface Window {
-    state: State
     electron: {
       ipcRenderer: {
         send: Electron.IpcRenderer['send']
@@ -28,6 +28,8 @@ declare global {
   }
 }
 
+export type ThreeJs = typeof THREE
+
 export type Color = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark'
 
 export type Accessories = 'Earings' | 'Flower' | 'Glasses' | 'HeadPhone'
@@ -44,9 +46,13 @@ export type Mouths = 'Default' | 'Astonished' | 'Eating' | 'Laugh' | 'Tongue'
 
 export type Necks = 'Default' | 'Bend Backward' | 'Bend Forward' | 'Thick'
 
+export type RenderStyle = '2d' | '3d'
+
 export type Noses = 'Default'
 
 export type AllowedChannels = 'setBackgroundColor'
+
+export type OmitState = 'backgroundColor' | 'desktopPath' | 'Backgrounds' | 'devMode' | 'renderer'
 
 export type AlpacaFeaturesOptions = UnionToIntersection<Entry<AlpacaFeatures>['1']['options']>
 
@@ -83,10 +89,14 @@ export interface AlpacaFeatures {
   Backgrounds: Feature<{ Backgrounds: undefined }>
 }
 
-export interface State extends AlpacaFeatures {
+export interface AppOptions {
   backgroundColor: string
   desktopPath: string
+  devMode: boolean
+  renderer: RenderStyle
 }
+
+export interface State extends AppOptions, AlpacaFeatures {}
 
 export interface StateAction<T> {
   type: keyof T
@@ -102,6 +112,7 @@ export interface AlpacaComponentProps {
   state: State
   setState: React.Dispatch<StateAction<PartialDeep<State>>>
   setBackgroundColor?: (color: string) => void
+  setRenderer?: (style: RenderStyle) => void
   reducers: {
     [key in Entry<AlpacaFeatures>['0']]: {
       reducer: [AlpacaFeatures[key], React.Dispatch<StateAction<AlpacaFeatures>>]

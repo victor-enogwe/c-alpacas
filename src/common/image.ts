@@ -1,8 +1,8 @@
 import html2canvas from 'html2canvas'
 import { AlpacaFeatures, AlpacaFeaturesOptions } from '../@types/typings'
 
-export function getStatic (): string {
-  return __static
+export function getStatic (devMode: boolean): string {
+  return devMode ? '/' : __static + '/'
 }
 
 export function imageZIndex (feature: keyof AlpacaFeatures, subFeature: keyof AlpacaFeaturesOptions): number {
@@ -56,14 +56,27 @@ export function imageTopPosition (feature: keyof AlpacaFeatures, subFeature: key
   }
 }
 
-export default function getImage (feature: keyof AlpacaFeatures, subFeature: keyof AlpacaFeaturesOptions): string {
-  return `${getStatic()}/${feature}/${subFeature.replace(' ', '-')}`.toLowerCase() + '.png'
+export default function getImage (devMode: boolean, feature: keyof AlpacaFeatures, subFeature: keyof AlpacaFeaturesOptions): string {
+  return `${getStatic(devMode)}${feature}/${subFeature.replace(' ', '-')}`.toLowerCase() + '.png'
+}
+
+function saveScreenshot (blob: Blob | null): void {
+  if (!blob) return
+
+  const fileName = `alpaca-${Date.now()}`
+  const link = document.createElement('a')
+  link.download = fileName + '.png'
+  link.href = URL.createObjectURL(blob)
+  link.click()
 }
 
 export async function captureImage (screen: HTMLDivElement | null, path: string): Promise<void> {
   if (!screen) return
 
   return await html2canvas(screen)
-    .then(canvas => canvas.toDataURL('image/png').replace(/^data:image\/png/, 'data:application/octet-stream'))
-    .then(base64Data => console.error(path, base64Data, 'base64', console.error))
+    .then((canvas) => canvas.toBlob(saveScreenshot))
+
+  // return await html2canvas(screen)
+  //   .then(canvas => canvas.toDataURL('image/png').replace(/^data:image\/png/, 'data:application/octet-stream'))
+  //   .then(base64Data => logger.log(path, base64Data, 'base64', logger.log))
 }

@@ -3,11 +3,14 @@ import omit from 'lodash.omit'
 import sortBy from 'lodash.sortby'
 import React from 'react'
 import { Except } from 'type-fest'
-import { AlpacaComponentProps, AlpacaFeaturesOptions, AlpacaFeaturesOptionsReducer, State } from '../@types/typings'
+import { AlpacaComponentProps, AlpacaFeaturesOptions, AlpacaFeaturesOptionsReducer, AppOptions, State } from '../@types/typings'
+import { ALPACA_OMIT_STATE } from '../common/constants'
 import { ColorPicker } from './ColorPicker'
 
-export default function Options ({ state, reducers, setBackgroundColor = () => undefined }: AlpacaComponentProps): React.ReactElement {
-  const activeFeature: keyof Except<State, 'backgroundColor' | 'desktopPath'> = get(
+export default function Options (
+  { state, reducers, setBackgroundColor = () => undefined, setRenderer = () => undefined }: AlpacaComponentProps
+): React.ReactElement {
+  const activeFeature: keyof Except<State, keyof AppOptions> = get(
     Object.values(state).filter(({ active }) => active),
     '0.name'
   )
@@ -17,14 +20,33 @@ export default function Options ({ state, reducers, setBackgroundColor = () => u
   const activeFeatureReducer = get(reducers[activeFeature].reducer, 1, () => undefined)
 
   return (
-    <div className='d-flex flex-column justify-content-between flex-grow-1 flex-fill' style={{ minHeight: 392 }}>
-      <h2 className='fw-bolder fs-4 mb-5'>Customize Your Alpaca</h2>
+    <div className='d-flex flex-column justify-content-between flex-grow-1 flex-fill' style={{ minHeight: 392, maxHeight: 392 }}>
+      <h2 className='fw-bolder fs-4 mb-3'>Customize Your Alpaca</h2>
 
       <div
-        className="btn-toolbar d-flex flex-column flex-grow-1 flex-fill row row-cols-12 g-5 justify-content-between"
+        className="btn-toolbar d-flex flex-column flex-grow-1 flex-fill row row-cols-12 g-3 justify-content-between"
         role="toolbar"
         aria-label="Customize Your Alpaca"
       >
+        <div className='d-flex flex-column flex-grow-1 flex-fill'>
+          <h3 className='fw-bolder fs-6'>Renderer</h3>
+          <div className="btn-group btn-group-sm flex-wrap flex-row row row-cols-3 g-2" role="group" aria-label="Accessories">
+            <button
+              type="button"
+              className={ `btn rounded-0 ${state.renderer === '2d' ? 'btn-secondary btn-raised' : 'btn-outline-light'}` }
+              onClick={() => setRenderer('2d')}
+            >
+              2d
+            </button>
+            <button
+              type="button"
+              className={ `btn rounded-0 ${state.renderer === '3d' ? 'btn-secondary btn-raised' : 'btn-outline-light'}` }
+              onClick={() => setRenderer('3d')}
+            >
+              3d
+            </button>
+          </div>
+        </div>
         <div className='d-flex flex-column flex-grow-1 flex-fill'>
           <h3 className='fw-bolder fs-6'>Features</h3>
           <div className="btn-group btn-group-sm flex-wrap flex-row row row-cols-3 g-2" role="group" aria-label="Accessories">
@@ -42,7 +64,7 @@ export default function Options ({ state, reducers, setBackgroundColor = () => u
             >
               Backgrounds
             </button>
-            {sortBy(Object.values(omit(state, ['backgroundColor', 'desktopPath', 'Backgrounds'])), ({ name }) => name)
+            {sortBy(Object.values(omit(state, ALPACA_OMIT_STATE)), ({ name }) => name)
               .map(({ name, color, active }, index) => (
                 <button
                   type="button"
@@ -63,14 +85,14 @@ export default function Options ({ state, reducers, setBackgroundColor = () => u
           <h3 className='fw-bolder small'>Pick {activeFeature}</h3>
           <div
             className="btn-group btn-group-sm flex-wrap flex-row row row-cols-3 g-2"
-            role="group" aria-label={`${activeFeature} Styles`}
+            role="group" aria-label={`${String(activeFeature)} Styles`}
           >
             {showColorPicker && <ColorPicker color={state?.backgroundColor ?? ''} setBackgroundColor={setBackgroundColor} />}
             {sortBy(Object.values(activeFeatureOptions), ({ name }) => name).map(({ name, color, active }, index) => (
               <button
                 type="button"
                 className={`btn rounded-0 ${active ? `btn-${String(color)} btn-raised` : 'btn-outline-light'}`}
-                key={`${activeFeature}-${String(name)}-${index}`}
+                key={`${String(activeFeature)}-${String(name)}-${index}`}
                 onClick={() => {
                   const multiple = state[activeFeature].multiple
                   const reducer: AlpacaFeaturesOptionsReducer = get(reducers[activeFeature].options, `${String(name)}.reducer.1`)

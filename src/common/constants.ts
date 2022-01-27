@@ -1,6 +1,8 @@
-import { Accessories, AlpacaFeatures, Color, Ears, Eyes, Hair, Legs, Mouths, Necks, Noses } from '../@types/typings'
+import { Accessories, AlpacaFeatures, Color, Ears, Eyes, Hair, Legs, Mouths, Necks, Noses, OmitState } from '../@types/typings'
 
 export const COLORS: Color[] = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
+
+export const DEFAULT_BACKGROUND_COLOR = '#FE9200'
 
 export const HAIR_FEATURES: Hair[] = ['Bang', 'Curls', 'Elegant', 'Fancy', 'Default', 'Quiff', 'Short']
 
@@ -30,11 +32,11 @@ export const ALPACA_FEATURES: Array<keyof Omit<AlpacaFeatures, 'Backgrounds'>> =
 ]
 
 export const PICKER_COLORS = [
+  DEFAULT_BACKGROUND_COLOR,
   '#4D4D4D',
   '#999999',
   '#334DE5',
   '#F44E3B',
-  '#FE9200',
   '#8B8000',
   '#DBAF00',
   '#A4DD00',
@@ -70,6 +72,8 @@ export const PICKER_COLORS = [
   '#FF5300',
   '#A4A4A5'
 ]
+
+export const ALPACA_OMIT_STATE: OmitState[] = ['backgroundColor', 'desktopPath', 'Backgrounds', 'devMode', 'renderer']
 
 export const ALPACA_SUB_FEATURES = [
   HAIR_FEATURES,

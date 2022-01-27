@@ -1,14 +1,17 @@
 import { app, BrowserWindow, shell } from 'electron'
-import installer, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
-import partialRight from 'lodash.partialright'
+import defaultsDeep from 'lodash.defaultsdeep'
 import { resolve } from 'path'
+import { State } from '../@types/typings'
+import { DEFAULT_BACKGROUND_COLOR } from '../common/constants'
+import { logger } from '../common/log'
 import { registerInterProcessCommunication } from './ipc'
 import { MenuBuilder } from './menu'
 
 export class Main {
-  devMode = Boolean(process.env.ELECTRON_IS_DEV) ?? !app.isPackaged
+  isEnvSet = 'ELECTRON_IS_DEV' in process.env
+  devMode = this.isEnvSet ? Number.parseInt(String(process.env.ELECTRON_IS_DEV), 10) === 1 : !app.isPackaged
 
   constructor () {
     log.transports.file.level = 'info'
@@ -18,7 +21,11 @@ export class Main {
   }
 
   async initialize (): Promise<BrowserWindow> {
-    return await this.createBrowserWindow().then(this.loadView.bind(this)).then(this.setBrowserWindowOptions.bind(this))
+    const browserWindow = await this.createBrowserWindow()
+
+    return await this.installDevExtensions()
+      .then(async () => await this.loadView(browserWindow))
+      .then(() => this.setBrowserWindowOptions(browserWindow))
   }
 
   devModeSettings (): void {
@@ -31,7 +38,7 @@ export class Main {
     if (this.devMode) return undefined
 
     autoUpdater.logger = log
-    autoUpdater.checkForUpdatesAndNotify().catch(console.error)
+    autoUpdater.checkForUpdatesAndNotify().catch(logger.log)
   }
 
   async createBrowserWindow (): Promise<BrowserWindow> {
@@ -40,6 +47,7 @@ export class Main {
       height: 576,
       title: 'C-Alpacas',
       titleBarStyle: 'hidden',
+      backgroundColor: DEFAULT_BACKGROUND_COLOR,
       resizable: false,
       frame: false,
       icon: resolve(__static, 'icon.png'),
@@ -48,6 +56,7 @@ export class Main {
         sandbox: true,
         nodeIntegration: false,
         contextIsolation: true,
+        partition: 'persist:tmp',
         preload: resolve(app.getAppPath(), 'preload.js')
       }
     })
@@ -61,14 +70,19 @@ export class Main {
   }
 
   setBrowserWindowOptions (browserWindow: BrowserWindow): BrowserWindow {
-    if (this.devMode) browserWindow.webContents.openDevTools({ mode: 'undocked', activate: true })
     const menu = new MenuBuilder(browserWindow, this.devMode)
+    const { desktopPath, backgroundColor, devMode } = this.initialState(browserWindow)
 
     menu.buildMenu()
     browserWindow.removeMenu()
-    browserWindow.webContents.once('dom-ready', partialRight(registerInterProcessCommunication, browserWindow))
-    browserWindow.webContents.once('dom-ready', () => { this.installDevExtensions().catch(console.error) })
-    browserWindow.webContents.debugger.attach('1.1')
+    registerInterProcessCommunication(browserWindow)
+    this.attachDevTools(browserWindow)
+
+    browserWindow.show()
+    browserWindow.webContents.executeJavaScript(`localStorage.setItem('backgroundColor', '${backgroundColor}')`).catch(logger.log)
+    browserWindow.webContents.executeJavaScript(`localStorage.setItem('desktopPath', '${desktopPath}')`).catch(logger.log)
+    browserWindow.webContents.executeJavaScript(`localStorage.setItem('devMode', '${String(devMode)}')`).catch(logger.log)
+    browserWindow.webContents.on('devtools-opened', () => browserWindow.focus())
 
     return browserWindow
   }
@@ -88,14 +102,32 @@ export class Main {
   }
 
   async installDevExtensions (): Promise<string> {
-    const forceDownload = Boolean(process.env.UPGRADE_EXTENSIONS)
-    const extensions = [REACT_DEVELOPER_TOOLS]
+    if (!this.devMode) return ''
 
-    return await installer(extensions, forceDownload)
+    return await import('electron-devtools-installer').then(async ({ REACT_DEVELOPER_TOOLS, default: installer }) => {
+      const forceDownload = Boolean(process.env.UPGRADE_EXTENSIONS)
+      const extensions = [REACT_DEVELOPER_TOOLS]
+
+      return await installer(extensions, { forceDownload, loadExtensionOptions: { allowFileAccess: true } })
+    })
+  }
+
+  attachDevTools (browserWindow: BrowserWindow): void {
+    if (!this.devMode) return
+
+    browserWindow.webContents.openDevTools({ mode: 'undocked', activate: true })
+    browserWindow.webContents.debugger.attach('1.1')
   }
 
   openExternalLinks (event: Electron.NewWindowEvent, url: string): void {
     event.preventDefault()
-    shell.openExternal(url).catch(console.error)
+    shell.openExternal(url).catch(logger.log)
+  }
+
+  initialState (browserWindow: BrowserWindow): State {
+    const backgroundColor = browserWindow.getBackgroundColor()
+    const state: State = defaultsDeep({ desktopPath: app.getPath('desktop'), backgroundColor }, { devMode: this.devMode })
+
+    return state
   }
 }

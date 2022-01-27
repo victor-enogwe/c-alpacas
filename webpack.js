@@ -10,18 +10,34 @@ function rendererConfig (config) {
   const cspMeta = { 'http-equiv': 'Content-Security-Policy', content: cspContent }
   const xCspMeta = { 'http-equiv': 'X-Content-Security-Policy', content: cspContent }
   const htmlMeta = { charset: 'UTF-8', viewport, 'X-Content-Security-Policy': xCspMeta, 'Content-Security-Policy': cspMeta }
-  const lodashModules = ['omit', 'defaultsdeep', 'get', 'sortby'].map(method => `lodash.${method}`)
-  const whitelistedModules = ['react', 'react-color', 'html2canvas'].concat(lodashModules)
+  const lodashModules = ['omit', 'defaultsdeep', 'get', 'set', 'sortby'].map(method => `lodash.${method}`)
+  const whitelistedModules = ['react', 'react-dom', 'react-color', 'html2canvas', 'three'].concat(lodashModules)
   const externals = config.externals.filter(externalModule => !whitelistedModules.includes(externalModule))
+  const chunks = {
+    cacheGroups: {
+      vendor: {
+        test: /[\\\/]node_modules[\\\/]/,
+        name: 'vendors',
+        chunks: 'all'
+      },
+      styles: {
+        name: 'styles',
+        test: /\.css$/,
+        chunks: 'all',
+        enforce: true
+      }
+    }
+  }
 
   set(config, 'devtool', 'nosources-source-map')
-  set(config, 'node.__dirname', false)
+  set(config, 'node', undefined)
   set(config, 'output.libraryTarget', 'var')
   set(config, 'target', 'web')
-  // set(config, 'externals', externals)
+  set(config, 'externals', externals)
+  set(config, 'optimization.splitChunks', chunks)
   set(htmlWebpackPlugin, 'options.inject', 'body')
   set(htmlWebpackPlugin, 'options.nodeModulePath', undefined)
-  set(htmlWebpackPlugin, 'options.template', 'auto')
+  set(htmlWebpackPlugin, 'options.template', resolve(__dirname, 'src', 'index.ejs'))
   set(htmlWebpackPlugin, 'options.title', 'C-Alpacas')
   set(htmlWebpackPlugin, 'options.filename', 'index.html')
   set(htmlWebpackPlugin, 'options.meta', { ...htmlMeta, 'theme-color': '#fe9200' })
@@ -33,4 +49,14 @@ function rendererConfig (config) {
   return config
 }
 
-module.exports = rendererConfig
+function mainConfig (config) {
+  set(config, 'output.libraryTarget', 'umd')
+
+  return config
+}
+
+function webpackConfig (config) {
+  return config.target === 'electron-main' ? mainConfig(config) : rendererConfig(config)
+}
+
+module.exports = webpackConfig

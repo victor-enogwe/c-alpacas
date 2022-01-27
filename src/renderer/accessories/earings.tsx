@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { DoubleSide, Mesh, MeshBasicMaterial, PerspectiveCamera, RingGeometry, Scene, WebGLRenderer } from 'three'
+import { ThreeJs } from '../../@types/typings'
 import animate from '../../common/animate'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const THREEJS: ThreeJs = require('three/build/three.js')
+
 export default function Earings (): React.ReactElement {
+  const { DoubleSide, Mesh, MeshBasicMaterial, PerspectiveCamera, RingGeometry, Scene, WebGLRenderer } = THREEJS
   const [ref, setRef] = useState<HTMLDivElement | null>(null)
   const width = ref?.offsetWidth ?? 0
   const height = ref?.offsetHeight ?? 0

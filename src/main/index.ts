@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import { logger } from '../common/log'
 import { Main } from './main'
 
 const main = new Main()
@@ -10,4 +11,4 @@ app.on('window-all-closed', () => process.platform !== 'darwin' ? app.quit() : u
 app.enableSandbox()
 app.whenReady()
   .then(async () => await main.initialize())
-  .catch(error => console.error(error.message))
+  .catch(error => [logger.log(error.message), app.quit()])
