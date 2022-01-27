@@ -35,6 +35,9 @@ function once (this: IpcRenderer, channel: AllowedChannels, listener: (event: Ip
   return ipcRenderer.once(channel, listener)
 }
 
-const electronAPI = { ipcRenderer: { send, sendSync, on, once } }
+const NODE_VERSION = process.versions.node
+const CHROME_VERSION = process.versions.chrome
+const ELECTRON_VERSION = process.versions.electron
+const electronAPI = { ipcRenderer: { send, sendSync, on, once }, versions: { NODE_VERSION, CHROME_VERSION, ELECTRON_VERSION } }
 
 contextBridge.exposeInMainWorld('electron', electronAPI)

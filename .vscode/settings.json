@@ -63,16 +63,19 @@
   "breadcrumbs.enabled": true,
   "cSpell.ignoreWords": [],
   "cSpell.words": [
+    "asar",
     "browserslist",
     "cond",
     "defaultsdeep",
     "isnan",
     "linewidth",
+    "nsis",
     "partialright",
     "popperjs",
     "roboto",
     "sortby",
     "THREEJS",
-    "undocked"
+    "undocked",
+    "xvfb"
   ]
 }

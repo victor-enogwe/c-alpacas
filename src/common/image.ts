@@ -2,7 +2,7 @@ import html2canvas from 'html2canvas'
 import { AlpacaFeatures, AlpacaFeaturesOptions } from '../@types/typings'
 
 export function getStatic (devMode: boolean): string {
-  return devMode ? '/' : __static + '/'
+  return devMode ? '/' : window.electron ? __static + '/' : '/'
 }
 
 export function imageZIndex (feature: keyof AlpacaFeatures, subFeature: keyof AlpacaFeaturesOptions): number {
@@ -70,13 +70,8 @@ function saveScreenshot (blob: Blob | null): void {
   link.click()
 }
 
-export async function captureImage (screen: HTMLDivElement | null, path: string): Promise<void> {
+export async function captureImage (screen: HTMLCanvasElement | null, path: string): Promise<void> {
   if (!screen) return
 
-  return await html2canvas(screen)
-    .then((canvas) => canvas.toBlob(saveScreenshot))
-
-  // return await html2canvas(screen)
-  //   .then(canvas => canvas.toDataURL('image/png').replace(/^data:image\/png/, 'data:application/octet-stream'))
-  //   .then(base64Data => logger.log(path, base64Data, 'base64', logger.log))
+  return await html2canvas(screen).then((canvas) => canvas.toBlob(saveScreenshot))
 }

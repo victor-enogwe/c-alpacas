@@ -2,7 +2,7 @@ import defaultsDeep from 'lodash.defaultsdeep'
 import { Entry, Except } from 'type-fest'
 import { AlpacaFeatures, State } from '../@types/typings'
 import { PICKER_COLORS } from './constants'
-import { ALPACA_ALL_FEATURES, ALPACA_OPTIONS } from './options'
+import { ALPACA_ALL_FEATURES, ALPACA_OPTIONS, DEFAULT_STATE } from './options'
 
 export function random (start: number, stop: number): number {
   return Math.floor(Math.random() * (stop - start + 1) + start)
@@ -28,6 +28,7 @@ export default function randomOptions (): State {
             }, accumulator), { ...ALPACA_OPTIONS[feature].options })
         }, features[feature])
       }, features)
-    }, { ...ALPACA_OPTIONS })
+    }, { ...ALPACA_OPTIONS }),
+    DEFAULT_STATE
   )
 }

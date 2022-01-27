@@ -41,6 +41,12 @@ body {
   color: #ffffff;
 }
 
+.container {
+  max-width: 768px;
+  max-height: 576px;
+  border-radius: 10px;
+}
+
 .btn:focus, .btn:active {
    outline: none !important;
    box-shadow: none;

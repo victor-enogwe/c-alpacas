@@ -1,6 +1,7 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, BrowserWindowConstructorOptions, shell } from 'electron'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
+import { HandlerDetails } from 'electron/main'
 import defaultsDeep from 'lodash.defaultsdeep'
 import { resolve } from 'path'
 import { State } from '../@types/typings'
@@ -15,12 +16,12 @@ export class Main {
 
   constructor () {
     log.transports.file.level = 'info'
-
-    this.devModeSettings()
-    this.prodModeSettings()
   }
 
   async initialize (): Promise<BrowserWindow> {
+    this.devModeSettings()
+    await this.prodModeSettings()
+
     const browserWindow = await this.createBrowserWindow()
 
     return await this.installDevExtensions()
@@ -34,11 +35,16 @@ export class Main {
     module.hot?.accept()
   }
 
-  prodModeSettings (): void {
+  async prodModeSettings (): Promise<void> {
     if (this.devMode) return undefined
 
     autoUpdater.logger = log
-    autoUpdater.checkForUpdatesAndNotify().catch(logger.log)
+
+    // try {
+    //   await autoUpdater.checkForUpdatesAndNotify()
+    // } catch (error: unknown) {
+    //   logger.log((error as Error).message)
+    // }
   }
 
   async createBrowserWindow (): Promise<BrowserWindow> {
@@ -83,6 +89,7 @@ export class Main {
     browserWindow.webContents.executeJavaScript(`localStorage.setItem('desktopPath', '${desktopPath}')`).catch(logger.log)
     browserWindow.webContents.executeJavaScript(`localStorage.setItem('devMode', '${String(devMode)}')`).catch(logger.log)
     browserWindow.webContents.on('devtools-opened', () => browserWindow.focus())
+    browserWindow.webContents.setWindowOpenHandler(this.openExternalLinks.bind(null))
 
     return browserWindow
   }
@@ -119,9 +126,12 @@ export class Main {
     browserWindow.webContents.debugger.attach('1.1')
   }
 
-  openExternalLinks (event: Electron.NewWindowEvent, url: string): void {
-    event.preventDefault()
+  openExternalLinks (
+    { url }: HandlerDetails
+  ): { action: 'deny' } | { action: 'allow', overrideBrowserWindowOptions?: BrowserWindowConstructorOptions } {
     shell.openExternal(url).catch(logger.log)
+
+    return { action: 'allow' }
   }
 
   initialState (browserWindow: BrowserWindow): State {

@@ -1,6 +1,5 @@
 import { Menu, MenuItemConstructorOptions } from 'electron'
 import React from 'react'
-import { Options as SourcemapSupportOptions, Position, UrlAndMap } from 'source-map-support'
 import THREE from 'three'
 import { Entry, Except, Merge, PartialDeep, UnionToIntersection } from 'type-fest'
 
@@ -8,7 +7,13 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   let __static: string
 
+  interface Navigator {
+    userAgentData: NavigatorUAData
+  }
+
   interface Window {
+    opr: boolean
+    chrome: boolean
     electron: {
       ipcRenderer: {
         send: Electron.IpcRenderer['send']
@@ -16,14 +21,12 @@ declare global {
         on: Electron.IpcRenderer['on']
         once: Electron.IpcRenderer['once']
       }
-    }
-    sourceMapSupport: {
-      wrapCallSite: (frame: unknown) => unknown
-      getErrorSource: (error: Error) => string | null
-      mapSourcePosition: (position: Position) => Position
-      retrieveSourceMap: (source: string) => UrlAndMap | null
-      resetRetrieveHandlers: () => void
-      install: (options?: SourcemapSupportOptions) => void
+      versions: {
+        NODE_VERSION: string
+        CHROME_VERSION: string
+        ELECTRON_VERSION: string
+        GIT_URL: string
+      }
     }
   }
 }
@@ -57,6 +60,15 @@ export type OmitState = 'backgroundColor' | 'desktopPath' | 'Backgrounds' | 'dev
 export type AlpacaFeaturesOptions = UnionToIntersection<Entry<AlpacaFeatures>['1']['options']>
 
 export type AlpacaFeaturesOptionsReducer = React.Dispatch<StateAction<AlpacaFeaturesOptions>>
+
+interface NavigatorUAData {
+  mobile: boolean
+  platform: string
+  brands: Array<{
+    brand: string
+    version: string
+  }>
+}
 
 export interface AlpacaDimension {
   width: number
