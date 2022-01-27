@@ -1,13 +1,17 @@
 const set = require("lodash.set")
 const { resolve } = require('path')
+const CopyPlugin = require("copy-webpack-plugin")
 
 function rendererConfig (config) {
   const htmlPath = resolve(__dirname, 'src', 'index.ejs')
   const isProduction = config.mode!== 'development'
   const htmlWebpackPlugin = config.plugins.filter(plugin => plugin.constructor.name === 'HtmlWebpackPlugin')[0]
   const defineWebpackPlugin = config.plugins.filter(plugin => plugin.constructor.name === 'DefinePlugin')[0]
+  const staticFrom = resolve(__dirname, 'src', 'static')
+  const staticTo = resolve(__dirname, 'dist', 'renderer')
+  const copyPlugin = new CopyPlugin({ patterns: [{ from: staticFrom, to: staticTo }], options: { concurrency:  200 } })
   const cspGit = process.env.GIT_SRC ? 'https://raw.githubusercontent.com' : ''
-  const viewport = 'width=device-width, initial-scale=1.0, shrink-to-fit=no user-scalable=no'
+  const viewport = 'width=device-width, initial-scale=0.1, shrink-to-fit=no user-scalable=no'
   const content = `default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: ${cspGit}; style-src 'self' 'unsafe-inline'`
   const cspMeta = { 'http-equiv': 'Content-Security-Policy', content }
   const xCspMeta = { 'http-equiv': 'X-Content-Security-Policy', content }
@@ -60,7 +64,9 @@ function rendererConfig (config) {
   set(htmlWebpackPlugin, 'options.minify', isProduction)
   set(defineWebpackPlugin, 'definitions', definitions)
   set(config, 'plugins', config.plugins.filter(plugin => !replacedPlugins.includes(plugin.constructor.name))
-    .concat([defineWebpackPlugin, htmlWebpackPlugin]))
+    .concat([defineWebpackPlugin, htmlWebpackPlugin].concat(isProduction ? [copyPlugin] : [])))
+
+  console.log(isProduction, ' prod')
 
   return config
 }
